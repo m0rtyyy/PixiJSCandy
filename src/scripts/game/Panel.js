@@ -16,6 +16,10 @@ export class Panel {
 
     }
 
+    getField(row,col){
+        return this.bloques.find(bloque => bloque.row == row && bloque.col == col);
+    }
+
     crear() {
         this.crearBloques();
         this.crearItems();

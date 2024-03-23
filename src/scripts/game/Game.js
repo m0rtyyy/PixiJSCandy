@@ -1,6 +1,7 @@
 import { App } from "../system/App";
 import { Scene } from "../system/Scene";
 import { Bloque } from "./Bloque";
+import { CombinationManager } from "./CombinationManager";
 import { Panel } from "./Panel";
 
 export class Game extends Scene {
@@ -9,6 +10,8 @@ export class Game extends Scene {
         this.itemSeleccionado = null;
         this.createBackground();
         this.createPanel();
+        this.combinationManager = new CombinationManager(this.panel);
+
     }
 
     createPanel() {
@@ -33,6 +36,7 @@ export class Game extends Scene {
             }else{
                 //2. Arrastrar el item si hay uno seleccionado
                 this.swap(this.itemSeleccionado,item);
+
             }
         }
 
@@ -54,6 +58,8 @@ export class Game extends Scene {
         itemSeleccionado.moverA(item.bloque.position, 0.2); 
         item.moverA(itemSeleccionado.bloque.position, 0.2).then(() =>{
             this.panel.swap(itemSeleccionado,item);
+            const matches = this.combinationManager.getMatches();
+            console.log(matches);
             this.desactivado = false; //bloqueamos
         }); 
         //1. Reiniciar bloques al mover el item
