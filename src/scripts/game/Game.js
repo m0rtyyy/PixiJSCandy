@@ -11,6 +11,24 @@ export class Game extends Scene {
         this.createBackground();
         this.createPanel();
         this.combinationManager = new CombinationManager(this.panel);
+        this.removeStartMatches();
+
+    }
+
+    removeStartMatches(){
+        let matches = this.combinationManager.getMatches();
+        console.log(matches);
+
+        while (matches.length) {
+            this.eliminarMatches(matches);
+
+            const fields = this.panel.bloques.filter(bloque => bloque.item == null);
+            fields.forEach(emptyField => {
+                this.panel.crearItem(emptyField);
+            });
+             matches = this.combinationManager.getMatches();
+
+        }
 
     }
 
@@ -63,7 +81,6 @@ export class Game extends Scene {
                 this.procesarMatches(matches);
             }
             console.log(matches);
-            this.desactivado = false; //bloqueamos
         }); 
         //1. Reiniciar bloques al mover el item
         //2. Reiniciar items en el panel de bloques
@@ -73,9 +90,20 @@ export class Game extends Scene {
 
     procesarMatches(matches){
         this.eliminarMatches(matches);
-        this.procesarFallDown().then(() =>{
-            this.anadirItems();
-        });
+        this.procesarFallDown()
+        .then(() => this.anadirItems())
+        .then(() => this.onFallDownOver());
+    }
+
+    onFallDownOver(){
+        const matches = this.combinationManager.getMatches();
+
+        if(matches.length){
+            this.procesarMatches(matches)
+        }else{
+            this.desactivado = false; //bloqueamos
+
+        }
     }
 
     anadirItems(){
