@@ -1,16 +1,17 @@
 import { App } from "../system/App";
 import { Scene } from "../system/Scene";
-import { Field } from "./Field";
+import { Bloque } from "./Bloque";
+import { Panel } from "./Panel";
 
 export class Game extends Scene {
     create() {
         this.createBackground();
-        this.createField();
+        this.createPanel();
     }
 
-    createField() {
-        const field = new Field(1, 1);
-        this.container.addChild(field.sprite);
+    createPanel() {
+        this.panel = new Panel();
+        this.container.addChild(this.panel.container);
     }
 
     createBackground() {

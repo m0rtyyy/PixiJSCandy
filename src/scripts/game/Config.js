@@ -5,5 +5,9 @@ export const Config = {
     scenes: {
         Game
     },
-    loader: Tools.massiveRequire(require["context"]('./../../sprites/', true, /\.(mp3|png|jpe?g)$/))
+    loader: Tools.massiveRequire(require["context"]('./../../sprites/', true, /\.(mp3|png|jpe?g)$/)),
+    panel: {
+        rows: 6,
+        cols: 6,
+    }
 };
