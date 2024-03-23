@@ -52,6 +52,17 @@ export class Panel {
 
     }
 
+    swap(item1,item2) {
+        const item1Bloque = item1.bloque;
+        const item2Bloque = item2.bloque;
+        item1Bloque.item = item2;
+        item2.bloque = item1Bloque;
+
+        item2Bloque.item = item1;
+        item2.bloque = item2Bloque;
+
+    }
+
     ajustarPosicion(){
         this.tamanioBloque = this.bloques[0].sprite.width;
         this.anchoPanel = this.cols * this.tamanioBloque;

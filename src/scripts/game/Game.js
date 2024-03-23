@@ -19,13 +19,21 @@ export class Game extends Scene {
     }
 
     onItemClick(item){
+        if(this.desactivado){
+            return;
+        }
         //1. Seleccionar un nuevo item si no hay ningun seleccionado
         if (!this.itemSeleccionado) {
             this.seleccionarItem(item);
         }else{
-            //2. Arrastrar el item si hay uno seleccionado
-            this.swap(this.itemSeleccionado,item);
-
+            //Chequeamos que están cercas
+            if(!this.itemSeleccionado.esVecino(item)){
+                this.limpiarSeleccion();
+                this.seleccionarItem(item)
+            }else{
+                //2. Arrastrar el item si hay uno seleccionado
+                this.swap(this.itemSeleccionado,item);
+            }
         }
 
         
@@ -45,8 +53,8 @@ export class Game extends Scene {
         
         itemSeleccionado.moverA(item.bloque.position, 0.2); 
         item.moverA(itemSeleccionado.bloque.position, 0.2).then(() =>{
-            
-            this.desactivado = true; //bloqueamos
+            this.panel.swap(itemSeleccionado,item);
+            this.desactivado = false; //bloqueamos
         }); 
         //1. Reiniciar bloques al mover el item
         //2. Reiniciar items en el panel de bloques
