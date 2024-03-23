@@ -1,6 +1,7 @@
 import { App } from "../system/App";
 import * as PIXI from "pixi.js";
 import { Bloque } from "./Bloque";
+import { Item } from "./Item";
 
 export class Panel {
     constructor(){
@@ -16,6 +17,7 @@ export class Panel {
 
     crear() {
         this.crearBloques();
+        this.crearItems();
         
     }
 
@@ -41,9 +43,14 @@ export class Panel {
         //Aqui ajustamos la posicion Cogemos todo el ancho de la panbtalla emnos el panel. Lo dividimos entre dos y le sumamos la mitad del ancho de un bloque.
         this.container.x = (window.innerWidth - this.anchoPanel) /2 + this.tamanioBloque/2 ;
         this.container.y = (window.innerHeight - this.altoPanel) /2 + this.tamanioBloque/2 ;
-        
+
         console.log(this.anchoPanel, this.altoPanel);
 
+    }
+
+    crearItems(){
+       const item = new Item("green");
+       this.container.addChild(item.sprite); 
     }
 
 }
