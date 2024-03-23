@@ -2,6 +2,7 @@ import { App } from "../system/App";
 import * as PIXI from "pixi.js";
 import { Bloque } from "./Bloque";
 import { Item } from "./Item";
+import { ItemFactory } from "./ItemFactory";
 
 export class Panel {
     constructor(){
@@ -20,6 +21,17 @@ export class Panel {
         this.crearItems();
         
     }
+
+    crearItems(){
+        this.bloques.forEach(bloque => this.crearItem(bloque))
+     }
+
+     crearItem(bloque){
+        const item = ItemFactory.generar();
+        bloque.setItem(item);
+        this.container.addChild(item.sprite); 
+     }
+
 
     crearBloques(){
         for (let row = 0; row < this.rows; row++) {
@@ -48,9 +60,5 @@ export class Panel {
 
     }
 
-    crearItems(){
-       const item = new Item("green");
-       this.container.addChild(item.sprite); 
-    }
 
 }
