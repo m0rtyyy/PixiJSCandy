@@ -38,6 +38,7 @@ export class Panel {
         })
         bloque.setItem(item);
         this.container.addChild(item.sprite); 
+        return item;
      }
 
 

@@ -73,6 +73,87 @@ export class Game extends Scene {
 
     procesarMatches(matches){
         this.eliminarMatches(matches);
+        this.procesarFallDown().then(() =>{
+            this.anadirItems();
+        });
+    }
+
+    anadirItems(){
+        return new Promise(resolve =>{
+            //1. Obtenemos los campos vacios
+            const fields = this.panel.bloques.filter( bloque => bloque.item === null);
+            let total = fields.length;
+            let completed = 0;
+            //2. iteramos cada campo
+            fields.forEach(field => {
+            //3. Creamos un nuevo item
+            const item = this.panel.crearItem(field);
+            //4. Colocamos el item en el panel
+            item.sprite.y= -500;
+
+            const delay = Math.random() * 2/10 + 0.3/(field.row + 1);
+            
+            //5. Movemos el item creado en el campo vacio correspondiente
+            item.caerA(field.position,delay).then(()=>{
+                ++completed;
+                if(completed >= total){
+                    resolve();
+                }
+            })
+            
+            });
+
+
+        })
+    }
+
+    //Chequeamos de abajo arriba cada bloque. si hay uno vacío debemos bajar los otros
+    procesarFallDown(){
+        return new Promise(resolve =>{
+            let completed = 0;
+            //Animacion de empezar
+            let started = 0;
+
+            for (let row = this.panel.rows-1; row >= 0; row--) {
+                for (let col = this.panel.cols-1; col >= 0; col--) {
+                    const bloque = this.panel.getField(row,col);
+                    //Si ha encontrado uno vacio   
+                    if(!bloque.item) {
+                        ++started;
+                        //Cambiar todos los items que estan en la misma columna de todas las filas
+                        this.caerA(bloque).then(()=>{
+                            completed++;
+
+                            if(completed>=started){
+                                resolve();
+                            }
+                        })
+                    }
+                }
+               
+                
+            }
+        });
+    }
+
+    caerA(emptyField) {
+        //Chequear todas los bloques del panel que son mayores que el
+        for (let row = emptyField.row-1; row >=0; row--) {
+            let fallingField = this.panel.getField(row, emptyField.col);  
+            //Encuentra el primer bloque con item
+            if(fallingField.item) {
+                //El primer item encontrado debe de ser desplazado a la posicion actual
+                const fallingItem = fallingField.item;
+                fallingItem.bloque = emptyField;
+                emptyField.item = fallingItem;
+                fallingField.item = null;
+
+                // Hacer la animacion del item moviendose y pararla cuando encuentre un item debajo.
+                return fallingItem.caerA(emptyField.position);
+            }          
+        }
+
+        return Promise.resolve();
     }
 
     eliminarMatches(matches){
