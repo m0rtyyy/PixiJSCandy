@@ -23,11 +23,12 @@ export class Game extends Scene {
         if (!this.itemSeleccionado) {
             this.seleccionarItem(item);
         }else{
-            this.swap(this.seleccionarItem,item);
+            //2. Arrastrar el item si hay uno seleccionado
+            this.swap(this.itemSeleccionado,item);
 
         }
 
-        //2. Arrastrar el item si hay uno seleccionado
+        
         //3. Seleccionar un nuevo item si es el continuo (No puede mover mas de 1);
     }
     limpiarSeleccion(){
@@ -37,13 +38,19 @@ export class Game extends Scene {
         }
     }
 
-    swap(itemSeleccionadom, item){
-        //1. Reiniciar bloques al mover el item
+    //item es el que he seleccionado
+    swap(itemSeleccionado, item){
         this.desactivado = true; //Bloqueamos el panel para evitar movimientos de Items mientras la animacion está ocurriendo
         this.limpiarSeleccion(); // Esconde el item seleccionado
+        
+        itemSeleccionado.moverA(item.bloque.position, 0.2); 
+        item.moverA(itemSeleccionado.bloque.position, 0.2).then(() =>{
+            
+            this.desactivado = true; //bloqueamos
+        }); 
+        //1. Reiniciar bloques al mover el item
         //2. Reiniciar items en el panel de bloques
         //3. Ocupar el item en la nueva posicion del nuevo bloque.
-
 
     }
 
