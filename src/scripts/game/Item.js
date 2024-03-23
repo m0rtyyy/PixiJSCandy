@@ -39,6 +39,20 @@ export class Item {
 
     }
 
+
+    eliminar(){
+        if(!this.sprite){
+            return;
+        }
+        this.sprite.destroy();
+        this.sprite = null;
+
+        if(this.bloque) {
+            this.bloque.item = null;
+            this.bloque = null;
+        }
+    }
+
     
 }
 

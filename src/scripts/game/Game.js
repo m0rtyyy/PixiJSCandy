@@ -59,6 +59,9 @@ export class Game extends Scene {
         item.moverA(itemSeleccionado.bloque.position, 0.2).then(() =>{
             this.panel.swap(itemSeleccionado,item);
             const matches = this.combinationManager.getMatches();
+            if(matches.length) {
+                this.procesarMatches(matches);
+            }
             console.log(matches);
             this.desactivado = false; //bloqueamos
         }); 
@@ -66,6 +69,18 @@ export class Game extends Scene {
         //2. Reiniciar items en el panel de bloques
         //3. Ocupar el item en la nueva posicion del nuevo bloque.
 
+    }
+
+    procesarMatches(matches){
+        this.eliminarMatches(matches);
+    }
+
+    eliminarMatches(matches){
+        matches.forEach(match => {
+            match.forEach(item =>{
+                item.eliminar();
+            })
+        });
     }
 
     seleccionarItem(item){
