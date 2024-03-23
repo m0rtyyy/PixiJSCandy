@@ -1,203 +1,195 @@
 import { App } from "../system/App";
 import { Scene } from "../system/Scene";
-import { Bloque } from "./Bloque";
+import { Board } from "./Board";
 import { CombinationManager } from "./CombinationManager";
-import { Panel } from "./Panel";
 
 export class Game extends Scene {
     create() {
-        this.desactivado = false;
-        this.itemSeleccionado = null;
+        this.disabled = false;
+        this.selectedTile = null;
         this.createBackground();
-        this.createPanel();
-        this.combinationManager = new CombinationManager(this.panel);
+        this.createBoard();
+        this.combinationManager = new CombinationManager(this.board);
         this.removeStartMatches();
-
     }
 
-    removeStartMatches(){
+    removeStartMatches() {
         let matches = this.combinationManager.getMatches();
-        console.log(matches);
 
         while (matches.length) {
-            this.eliminarMatches(matches);
+            console.log(matches);
+            this.removeMatches(matches);
 
-            const fields = this.panel.bloques.filter(bloque => bloque.item == null);
-            fields.forEach(emptyField => {
-                this.panel.crearItem(emptyField);
+            const fields = this.board.fields.filter(field => field.tile === null);
+
+            fields.forEach(field => {
+                this.board.createTile(field);
             });
-             matches = this.combinationManager.getMatches();
 
+            matches = this.combinationManager.getMatches();
         }
 
     }
 
-    createPanel() {
-        this.panel = new Panel();
-        this.container.addChild(this.panel.container);
-        //cuando aparezca este evento (Lo emite el panel)
-        this.panel.container.on("item-touch-start", this.onItemClick.bind(this));
+    createBoard() {
+        this.board = new Board();
+        this.container.addChild(this.board.container);
+        this.board.container.on("tile-touch-start", this.onTileClick.bind(this));
     }
 
-    onItemClick(item){
-        if(this.desactivado){
+    onTileClick(tile) {
+        if (this.disabled) {
             return;
         }
-        //1. Seleccionar un nuevo item si no hay ningun seleccionado
-        if (!this.itemSeleccionado) {
-            this.seleccionarItem(item);
-        }else{
-            //Chequeamos que están cercas
-            if(!this.itemSeleccionado.esVecino(item)){
-                this.limpiarSeleccion();
-                this.seleccionarItem(item)
-            }else{
-                //2. Arrastrar el item si hay uno seleccionado
-                this.swap(this.itemSeleccionado,item);
 
+        if (!this.selectedTile) {
+            this.selectTile(tile);
+        } else {
+            if (!this.selectedTile.isNeighbour(tile)) {
+                this.clearSelection();
+                this.selectTile(tile);
+            } else {
+                this.swap(this.selectedTile, tile);
             }
         }
-
-        
-        //3. Seleccionar un nuevo item si es el continuo (No puede mover mas de 1);
     }
-    limpiarSeleccion(){
-        if(this.itemSeleccionado){
-            this.itemSeleccionado.bloque.desSeleccionar();
-            this.itemSeleccionado = null;
+
+    clearSelection() {
+        if (this.selectedTile) {
+            this.selectedTile.field.unselect();
+            this.selectedTile = null
         }
     }
 
-    //item es el que he seleccionado
-    swap(itemSeleccionado, item){
-        this.desactivado = true; //Bloqueamos el panel para evitar movimientos de Items mientras la animacion está ocurriendo
-        this.limpiarSeleccion(); // Esconde el item seleccionado
-        
-        itemSeleccionado.moverA(item.bloque.position, 0.2); 
-        item.moverA(itemSeleccionado.bloque.position, 0.2).then(() =>{
-            this.panel.swap(itemSeleccionado,item);
-            const matches = this.combinationManager.getMatches();
-            if(matches.length) {
-                this.procesarMatches(matches);
-            }
-            console.log(matches);
-        }); 
-        //1. Reiniciar bloques al mover el item
-        //2. Reiniciar items en el panel de bloques
-        //3. Ocupar el item en la nueva posicion del nuevo bloque.
+    swap(selectedTile, tile, reverse) {
+        this.disabled = true; // lock the board to prevent tiles movement while the animation is already running
+        this.clearSelection(); // hide the "field-selected"
 
-    }
+        selectedTile.moveTo(tile.field.position, 0.2);
+        tile.moveTo(selectedTile.field.position, 0.2).then(() => {
+            this.board.swap(selectedTile, tile);
 
-    procesarMatches(matches){
-        this.eliminarMatches(matches);
-        this.procesarFallDown()
-        .then(() => this.anadirItems())
-        .then(() => this.onFallDownOver());
-    }
 
-    onFallDownOver(){
-        const matches = this.combinationManager.getMatches();
-
-        if(matches.length){
-            this.procesarMatches(matches)
-        }else{
-            this.desactivado = false; //bloqueamos
-
-        }
-    }
-
-    anadirItems(){
-        return new Promise(resolve =>{
-            //1. Obtenemos los campos vacios
-            const fields = this.panel.bloques.filter( bloque => bloque.item === null);
-            let total = fields.length;
-            let completed = 0;
-            //2. iteramos cada campo
-            fields.forEach(field => {
-            //3. Creamos un nuevo item
-            const item = this.panel.crearItem(field);
-            //4. Colocamos el item en el panel
-            item.sprite.y= -500;
-
-            const delay = Math.random() * 2/10 + 0.3/(field.row + 1);
-            
-            //5. Movemos el item creado en el campo vacio correspondiente
-            item.caerA(field.position,delay).then(()=>{
-                ++completed;
-                if(completed >= total){
-                    resolve();
+            if (!reverse) {
+                const matches = this.combinationManager.getMatches();
+                if (matches.length) {
+                    this.processMatches(matches);
+                } else {
+                    this.swap(tile, selectedTile, true);
                 }
-            })
-            
-            });
-
-
-        })
-    }
-
-    //Chequeamos de abajo arriba cada bloque. si hay uno vacío debemos bajar los otros
-    procesarFallDown(){
-        return new Promise(resolve =>{
-            let completed = 0;
-            //Animacion de empezar
-            let started = 0;
-
-            for (let row = this.panel.rows-1; row >= 0; row--) {
-                for (let col = this.panel.cols-1; col >= 0; col--) {
-                    const bloque = this.panel.getField(row,col);
-                    //Si ha encontrado uno vacio   
-                    if(!bloque.item) {
-                        ++started;
-                        //Cambiar todos los items que estan en la misma columna de todas las filas
-                        this.caerA(bloque).then(()=>{
-                            completed++;
-
-                            if(completed>=started){
-                                resolve();
-                            }
-                        })
-                    }
-                }
-               
-                
+            } else {
+                this.disabled = false;
             }
         });
     }
 
-    caerA(emptyField) {
-        //Chequear todas los bloques del panel que son mayores que el
-        for (let row = emptyField.row-1; row >=0; row--) {
-            let fallingField = this.panel.getField(row, emptyField.col);  
-            //Encuentra el primer bloque con item
-            if(fallingField.item) {
-                //El primer item encontrado debe de ser desplazado a la posicion actual
-                const fallingItem = fallingField.item;
-                fallingItem.bloque = emptyField;
-                emptyField.item = fallingItem;
-                fallingField.item = null;
+    processMatches(matches) {
+        this.removeMatches(matches);
+        this.processFallDown()
+            .then(() => this.addTiles())
+            .then(() => this.onFallDownOver());
+    }
 
-                // Hacer la animacion del item moviendose y pararla cuando encuentre un item debajo.
-                return fallingItem.caerA(emptyField.position);
-            }          
+    onFallDownOver() {
+        const matches = this.combinationManager.getMatches();
+
+        if (matches.length) {
+            this.processMatches(matches)
+        } else {
+            this.disabled = false; // unlock the board
+        }
+    }
+
+    addTiles() {
+        return new Promise(resolve => {
+            // 1. fetch all empty fields
+            const fields = this.board.fields.filter(field => field.tile === null);
+            let total = fields.length;
+            let completed = 0;
+
+            // 2. for each empty field
+            fields.forEach(field => {
+                // 3. create a new tile
+                const tile = this.board.createTile(field);
+
+                // 4. place new tile above the board
+                tile.sprite.y = -500;
+
+                const delay = Math.random() * 2 / 10 + 0.3 / (field.row + 1);
+                // 5. move created tile to the corresponding empty field
+                tile.fallDownTo(field.position, delay).then(() => {
+                    ++completed;
+                    if (completed >= total) {
+                        resolve();
+                    }
+                });
+            });
+        });
+    }
+
+    processFallDown() {
+        return new Promise(resolve => {
+            let completed = 0;
+            let started = 0;
+
+            // check all fields of the board starting from the bottom row
+            for (let row = this.board.rows - 1; row >= 0; row--) {
+                for (let col = this.board.cols - 1; col >= 0; col--) {
+                    const field = this.board.getField(row, col);
+
+                    // if there is no tile in the field
+                    if (!field.tile) {
+                        ++started;
+
+                        // shift all tiles that are in the same col in all the rows above
+                        this.fallDownTo(field).then(() => {
+                            ++completed;
+
+                            if (completed >= started) {
+                                resolve();
+                            }
+                        });
+                    }
+                }
+            }
+
+
+        });
+    }
+
+    fallDownTo(emptyField) {
+        // check all board fields in the found empty field col but in all higher rows
+        for (let row = emptyField.row - 1; row >= 0; row--) {
+            let fallingField = this.board.getField(row, emptyField.col);
+
+            // find the first field with a tile
+            if (fallingField.tile)  {
+                // the first found tile will be placed in the curr empty field
+                const fallingTile = fallingField.tile;
+                fallingTile.field = emptyField;
+                emptyField.tile = fallingTile;
+                fallingField.tile = null;
+
+                // run the tile move method and stop searching a tile for that empty field
+                return fallingTile.fallDownTo(emptyField.position);
+           }
         }
 
         return Promise.resolve();
     }
 
-    eliminarMatches(matches){
+    removeMatches(matches) {
+        console.log(matches)
         matches.forEach(match => {
-            match.forEach(item =>{
-                item.eliminar();
-            })
+            match.forEach(tile => {
+                tile.remove();
+            });
         });
     }
 
-    seleccionarItem(item){
-        // Recordar el item seleccionado
-        this.itemSeleccionado = item;
-        // Hightlight
-        this.itemSeleccionado.bloque.seleccionar()
-
+    selectTile(tile) {
+        this.selectedTile = tile;
+        this.selectedTile.field.select();
     }
 
     createBackground() {

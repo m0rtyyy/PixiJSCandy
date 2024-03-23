@@ -1,32 +1,32 @@
 import { App } from "../system/App";
 
-export class CombinationManager{
-    constructor(panel){
-        this.panel = panel
+export class CombinationManager {
+    constructor(board) {
+        this.board = board;
     }
 
+    getMatches() {
+        let results = [];
 
-    getMatches(){
-        let resultados = [];
+        this.board.fields.forEach(checkingField => {
+            App.config.combinationRules.forEach(rule => {
+                let matches = [checkingField.tile];
 
-        this.panel.bloques.forEach(bloqueCheck => {
-            App.config.reglasCombinacion.forEach(regla => {
-                let matches = [bloqueCheck.item];
-                regla.forEach(position =>{
-                    const row = bloqueCheck.row + position.row;
-                    const col = bloqueCheck.col + position.col;
-                    const camposComparados = this.panel.getField(row,col);
-                    if(camposComparados && camposComparados.item.color === bloqueCheck.item.color ){
-                        matches.push(camposComparados.item);
+                rule.forEach(position => {
+                    const row = checkingField.row + position.row;
+                    const col = checkingField.col + position.col;
+                    const comparingField = this.board.getField(row, col);
+                    if (comparingField && comparingField.tile.color === checkingField.tile.color) {
+                        matches.push(comparingField.tile);
                     }
                 });
 
-                if(matches.length === regla.length + 1){
-                    resultados.push(matches);
+                if (matches.length === rule.length + 1) {
+                    results.push(matches);
                 }
-            })
+            });
         });
 
-        return resultados;
+        return results;
     }
 }
