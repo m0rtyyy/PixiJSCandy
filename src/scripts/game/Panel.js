@@ -28,6 +28,10 @@ export class Panel {
 
      crearItem(bloque){
         const item = ItemFactory.generar();
+        item.sprite.interactive = true;
+        item.sprite.on("pointerdown", () =>{
+            this.container.emit("item-touch-start", item);
+        })
         bloque.setItem(item);
         this.container.addChild(item.sprite); 
      }

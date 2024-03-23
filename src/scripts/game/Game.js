@@ -5,6 +5,8 @@ import { Panel } from "./Panel";
 
 export class Game extends Scene {
     create() {
+        this.desactivado = false;
+        this.itemSeleccionado = null;
         this.createBackground();
         this.createPanel();
     }
@@ -12,6 +14,45 @@ export class Game extends Scene {
     createPanel() {
         this.panel = new Panel();
         this.container.addChild(this.panel.container);
+        //cuando aparezca este evento (Lo emite el panel)
+        this.panel.container.on("item-touch-start", this.onItemClick.bind(this));
+    }
+
+    onItemClick(item){
+        //1. Seleccionar un nuevo item si no hay ningun seleccionado
+        if (!this.itemSeleccionado) {
+            this.seleccionarItem(item);
+        }else{
+            this.swap(this.seleccionarItem,item);
+
+        }
+
+        //2. Arrastrar el item si hay uno seleccionado
+        //3. Seleccionar un nuevo item si es el continuo (No puede mover mas de 1);
+    }
+    limpiarSeleccion(){
+        if(this.itemSeleccionado){
+            this.itemSeleccionado.bloque.desSeleccionar();
+            this.itemSeleccionado = null;
+        }
+    }
+
+    swap(itemSeleccionadom, item){
+        //1. Reiniciar bloques al mover el item
+        this.desactivado = true; //Bloqueamos el panel para evitar movimientos de Items mientras la animacion está ocurriendo
+        this.limpiarSeleccion(); // Esconde el item seleccionado
+        //2. Reiniciar items en el panel de bloques
+        //3. Ocupar el item en la nueva posicion del nuevo bloque.
+
+
+    }
+
+    seleccionarItem(item){
+        // Recordar el item seleccionado
+        this.itemSeleccionado = item;
+        // Hightlight
+        this.itemSeleccionado.bloque.seleccionar()
+
     }
 
     createBackground() {
